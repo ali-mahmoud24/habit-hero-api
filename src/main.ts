@@ -1,15 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import helmet from 'helmet';
+import * as helmet from 'helmet';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(helmet());
+  // app.use(helmet());
   app.enableCors({ origin: true });
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  // ✅ Validation globally
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // strips properties not in DTO
+      forbidNonWhitelisted: true, // throws error if unknown property is sent
+      transform: true, // auto-transform payloads to DTO classes
+    }),
+  );
+
+  // ✅ Global response formatting
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle('Habit Hero API')
