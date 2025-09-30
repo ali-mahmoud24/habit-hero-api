@@ -4,5 +4,11 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true
+  },
+  "paths": {
+    "@/*": ["src/*"],
+    "@prisma/*": ["src/prisma/*"],
+    "@common/*": ["src/common/*"],
+    "@admin/*": ["src/admin/*"]
   }
 }

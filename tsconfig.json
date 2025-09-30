@@ -20,6 +20,15 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+
+    "paths": {
+      "@/*": ["src/*"],
+      "@prisma/*": ["src/prisma/*"],
+      "@common/*": ["src/common/*"],
+      "@admin/*": ["src/admin/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }
