@@ -1,9 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { CreateAdminUserDto } from './dto/create-admin-user.dto';
-import { UpdateAdminUserDto } from './dto/update-admin-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from '@prisma/client';
-
 import { hash } from 'bcrypt';
 
 @Injectable()
@@ -20,7 +19,7 @@ export class AdminUsersService {
     return user;
   }
 
-  async create(data: CreateAdminUserDto): Promise<User> {
+  async create(data: CreateUserDto): Promise<User> {
     const hashedPassword = await hash(data.password, 10);
 
     return this.prisma.user.create({
@@ -31,7 +30,7 @@ export class AdminUsersService {
     });
   }
 
-  async update(id: string, data: UpdateAdminUserDto): Promise<User> {
+  async update(id: string, data: UpdateUserDto): Promise<User> {
     if (data.password) {
       data.password = await hash(data.password, 10);
     }
