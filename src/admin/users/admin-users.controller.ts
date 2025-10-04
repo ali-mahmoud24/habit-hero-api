@@ -6,32 +6,33 @@ import {
   Delete,
   Param,
   Body,
-  UseGuards,
   UseInterceptors,
+  HttpCode,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiResponse,
-  ApiBody,
-  ApiOperation,
-} from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { AdminUsersService } from './admin-users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Roles } from '@/common/decorators/roles.decarator';
-import { RolesGuard } from '@/common/guards/roles.guard';
 import { Role } from '@prisma/client';
 import { SerializeInterceptor } from '@/common/interceptors/serialize.interceptor';
 import { UserResponseDto } from './dto/user-response.dto';
+import { Roles } from '@/common/decorators/roles.decorator';
+import {
+  ApiErrorResponsesGetAll,
+  ApiErrorResponsesGetOne,
+  ApiErrorResponsesCreate,
+  ApiErrorResponsesUpdate,
+  ApiErrorResponsesDelete,
+} from '@/common/decorators/api-error-responses.decorator';
 
 @ApiTags('Admin - Users')
 @Controller('admin/users')
-@Roles(Role.ADMIN)
-// @UseGuards(RolesGuard) // enable when you want role protection
-@UseInterceptors(new SerializeInterceptor(UserResponseDto)) // 🔥 applied globally for this controller
+// @Roles(Role.ADMIN)
+@UseInterceptors(new SerializeInterceptor(UserResponseDto))
 export class AdminUsersController {
   constructor(private readonly adminUsersService: AdminUsersService) {}
 
+  // GET all
   @Get()
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({
@@ -39,10 +40,12 @@ export class AdminUsersController {
     description: 'List of all users',
     type: [UserResponseDto],
   })
+  @ApiErrorResponsesGetAll()
   async findAll(): Promise<UserResponseDto[]> {
     return this.adminUsersService.findAll();
   }
 
+  // GET one
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiResponse({
@@ -50,10 +53,12 @@ export class AdminUsersController {
     description: 'User found',
     type: UserResponseDto,
   })
+  @ApiErrorResponsesGetOne('User')
   async findOne(@Param('id') id: string): Promise<UserResponseDto> {
     return this.adminUsersService.findOne(id);
   }
 
+  // POST create
   @Post()
   @ApiOperation({ summary: 'Create a new user' })
   @ApiBody({
@@ -77,10 +82,12 @@ export class AdminUsersController {
     description: 'User created successfully',
     type: UserResponseDto,
   })
+  @ApiErrorResponsesCreate('Invalid user data', 'Email already exists')
   async create(@Body() dto: CreateUserDto): Promise<UserResponseDto> {
     return this.adminUsersService.create(dto);
   }
 
+  // PUT update
   @Put(':id')
   @ApiOperation({ summary: 'Update user by ID' })
   @ApiBody({
@@ -103,21 +110,17 @@ export class AdminUsersController {
     description: 'User updated successfully',
     type: UserResponseDto,
   })
-  async update(
-    @Param('id') id: string,
-    @Body() dto: UpdateUserDto,
-  ): Promise<UserResponseDto> {
+  @ApiErrorResponsesUpdate('Invalid update payload', 'User not found', 'Email already exists')
+  async update(@Param('id') id: string, @Body() dto: UpdateUserDto): Promise<UserResponseDto> {
     return this.adminUsersService.update(id, dto);
   }
 
+  // DELETE user
   @Delete(':id')
+  @HttpCode(204)
   @ApiOperation({ summary: 'Delete user by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'User deleted successfully',
-    type: UserResponseDto,
-  })
-  async delete(@Param('id') id: string): Promise<UserResponseDto> {
+  @ApiErrorResponsesDelete('User')
+  async delete(@Param('id') id: string): Promise<void> {
     return this.adminUsersService.delete(id);
   }
 }
