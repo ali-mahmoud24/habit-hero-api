@@ -1,14 +1,18 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+
+import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter';
 import { LoggerService } from '@/common/logger/logger.service';
+import { AppConfigService } from '@/config/app-config.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const config = app.get(AppConfigService);
+
   const logger = app.get(LoggerService);
   app.useLogger(logger);
 
@@ -29,22 +33,23 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
 
   // Global exception filter
-  app.useGlobalFilters(new AllExceptionsFilter(logger));
+  app.useGlobalFilters(new AllExceptionsFilter(config, logger));
 
   // Swagger setup
-  const config = new DocumentBuilder()
+  const swaggerConfig = new DocumentBuilder()
     .setTitle('Habit Hero API')
     .setDescription('Gamified habit tracker API')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
 
-  const doc = SwaggerModule.createDocument(app, config);
+  const doc = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, doc);
 
-  const port = process.env.PORT ?? 3000;
-  await app.listen(port);
-  logger.log(`Application running on http://localhost:${port}`, 'Bootstrap');
+  const PORT = config.get<number>('app.port');
+
+  await app.listen(PORT);
+  logger.log(`Application running on http://localhost:${PORT}`, 'Bootstrap');
 }
 
 bootstrap().catch((err) => {

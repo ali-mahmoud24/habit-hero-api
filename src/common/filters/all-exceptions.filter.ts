@@ -2,10 +2,14 @@ import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from
 import { Response, Request } from 'express';
 import { Prisma } from '@prisma/client';
 import { LoggerService } from '@/common/logger/logger.service';
+import { AppConfigService } from '@/config/app-config.service';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  constructor(private readonly logger: LoggerService) {}
+  constructor(
+    private readonly config: AppConfigService,
+    private readonly logger: LoggerService,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -34,20 +38,20 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     // LOGGER CALL
-this.logger.error(
-  `Exception caught: ${message} | ${JSON.stringify({
-    method: request.method,
-    path: request.url,
-    statusCode: status,
-    // errorName: error?.name || error,
-    stack: (exception as any)?.stack,
-    timestamp: new Date().toISOString(),
-  })}`,
-  (exception as any)?.stack,
-  'AllExceptionsFilter',
-);
+    this.logger.error(
+      `Exception caught: ${message} | ${JSON.stringify({
+        method: request.method,
+        path: request.url,
+        statusCode: status,
+        // errorName: error?.name || error,
+        stack: (exception as any)?.stack,
+        timestamp: new Date().toISOString(),
+      })}`,
+      (exception as any)?.stack,
+      'AllExceptionsFilter',
+    );
 
-    const isDev = process.env.NODE_ENV !== 'production';
+    const isDev = this.config.get<string>('app.nodeEnv') !== 'production';
 
     response.status(status).json({
       statusCode: status,
