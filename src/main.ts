@@ -5,30 +5,33 @@ import helmet from 'helmet';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter';
+import { LoggerService } from '@/common/logger/logger.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const logger = app.get(LoggerService);
+  app.useLogger(logger);
 
-  // ✅ Security
+  // Security middleware
   app.use(helmet());
   app.enableCors({ origin: true });
 
-  // ✅ Validation globally
+  // Global validation
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,              // strips properties not in DTO
-      forbidNonWhitelisted: true,   // throws error if unknown property is sent
-      transform: true,              // auto-transform payloads to DTO classes
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
 
-  // ✅ Global response formatting (serialization / DTO mapping)
+  // Global response transformation
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // ✅ Global exception filter (centralized error handling)
-  app.useGlobalFilters(new AllExceptionsFilter());
+  // Global exception filter
+  app.useGlobalFilters(new AllExceptionsFilter(logger));
 
-  // ✅ Swagger setup
+  // Swagger setup
   const config = new DocumentBuilder()
     .setTitle('Habit Hero API')
     .setDescription('Gamified habit tracker API')
@@ -39,7 +42,9 @@ async function bootstrap() {
   const doc = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, doc);
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
+  logger.log(`Application running on http://localhost:${port}`, 'Bootstrap');
 }
 
 bootstrap().catch((err) => {

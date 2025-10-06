@@ -119,6 +119,11 @@ export class AdminUsersController {
   @Delete(':id')
   @HttpCode(204)
   @ApiOperation({ summary: 'Delete user by ID' })
+    @ApiResponse({
+    status: 204,
+    description: 'User deleted successfully',
+    // type: [UserResponseDto],
+  })
   @ApiErrorResponsesDelete('User')
   async delete(@Param('id') id: string): Promise<void> {
     return this.adminUsersService.delete(id);

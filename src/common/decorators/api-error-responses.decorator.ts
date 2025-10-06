@@ -2,7 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../dto/error-response.dto';
 
-// ✅ Helper for 500 (always possible)
+//  Helper for 500 (always possible)
 function ApiInternalError(description = 'Internal Server Error') {
   return ApiResponse({
     status: 500,
@@ -34,12 +34,12 @@ function ApiInternalError(description = 'Internal Server Error') {
   });
 }
 
-// ✅ GET ALL: only 500
+//  GET ALL: only 500
 export function ApiErrorResponsesGetAll(description500?: string) {
   return applyDecorators(ApiInternalError(description500));
 }
 
-// ✅ GET ONE: 404 + 500
+//  GET ONE: 404 + 500
 export function ApiErrorResponsesGetOne(entity: string, description500?: string) {
   return applyDecorators(
     ApiResponse({
@@ -63,7 +63,7 @@ export function ApiErrorResponsesGetOne(entity: string, description500?: string)
   );
 }
 
-// ✅ POST (create): 400, 409, 500
+//  POST (create): 400, 409, 500
 export function ApiErrorResponsesCreate(
   badRequestDesc = 'Validation failed',
   conflictDesc = 'Conflict (e.g. duplicate entry)',
@@ -108,7 +108,7 @@ export function ApiErrorResponsesCreate(
   );
 }
 
-// ✅ PUT (update): 400, 404, 409, 500
+//  PUT (update): 400, 404, 409, 500
 export function ApiErrorResponsesUpdate(
   badRequestDesc = 'Validation failed',
   notFoundDesc = 'Resource not found',
@@ -171,7 +171,7 @@ export function ApiErrorResponsesUpdate(
   );
 }
 
-// ✅ DELETE: 404, 500
+//  DELETE: 404, 500
 export function ApiErrorResponsesDelete(entity: string, description500?: string) {
   return applyDecorators(
     ApiResponse({
