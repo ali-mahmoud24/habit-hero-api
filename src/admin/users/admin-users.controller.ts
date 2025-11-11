@@ -8,14 +8,15 @@ import {
   Body,
   UseInterceptors,
   HttpCode,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { AdminUsersService } from './admin-users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Role } from '@prisma/client';
 import { SerializeInterceptor } from '@/common/interceptors/serialize.interceptor';
 import { UserResponseDto } from './dto/user-response.dto';
+import { Role } from '@prisma/client';
 import { Roles } from '@/common/decorators/roles.decorator';
 import {
   ApiErrorResponsesGetAll,
@@ -24,6 +25,13 @@ import {
   ApiErrorResponsesUpdate,
   ApiErrorResponsesDelete,
 } from '@/common/decorators/api-error-responses.decorator';
+import { PaginationResult, type QueryParams } from '@/common/base/api-features';
+import { ApiQueryParams } from '@/common/decorators/api-query-params.decorator';
+
+interface PaginatedUsersResponse {
+  data: UserResponseDto[];
+  pagination: PaginationResult;
+}
 
 @ApiTags('Admin - Users')
 @Controller('admin/users')
@@ -35,14 +43,15 @@ export class AdminUsersController {
   // GET all
   @Get()
   @ApiOperation({ summary: 'Get all users' })
+  @ApiQueryParams({ fields: 'email,firstName', filter: { role: 'USER', isActive: true } })
   @ApiResponse({
     status: 200,
     description: 'List of all users',
     type: [UserResponseDto],
   })
   @ApiErrorResponsesGetAll()
-  async findAll(): Promise<UserResponseDto[]> {
-    return this.adminUsersService.findAll();
+  async findAll(@Query() query: QueryParams): Promise<PaginatedUsersResponse> {
+    return this.adminUsersService.findAll(query);
   }
 
   // GET one
@@ -119,7 +128,7 @@ export class AdminUsersController {
   @Delete(':id')
   @HttpCode(204)
   @ApiOperation({ summary: 'Delete user by ID' })
-    @ApiResponse({
+  @ApiResponse({
     status: 204,
     description: 'User deleted successfully',
     // type: [UserResponseDto],
